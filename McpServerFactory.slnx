@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/MinimalSmoke/MinimalSmoke.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/McpServerFactory/McpServerFactory.csproj" />
   </Folder>
