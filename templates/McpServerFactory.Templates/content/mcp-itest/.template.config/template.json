@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Diogo Carvalho",
+  "classifications": [
+    "MCP",
+    "Testing",
+    "xUnit"
+  ],
+  "identity": "diomonogatari.McpServerFactory.IntegrationTests.CSharp",
+  "groupIdentity": "diomonogatari.McpServerFactory.IntegrationTests",
+  "name": "McpServerFactory Integration Tests",
+  "shortName": "mcp-itest",
+  "sourceName": "McpServerFactoryTemplate",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "symbols": {
+    "McpServerFactoryVersion": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "Version of the McpServerFactory NuGet package.",
+      "defaultValue": "0.1.0",
+      "replaces": "__MCP_SERVER_FACTORY_VERSION__"
+    }
+  },
+  "primaryOutputs": [
+    {
+      "path": "McpServerFactoryTemplate.csproj"
+    }
+  ]
+}
