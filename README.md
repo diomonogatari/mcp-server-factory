@@ -21,6 +21,18 @@ integration tests without network ports, Docker, or external services.
 dotnet add package McpServerFactory
 ```
 
+## Template-based scaffolding
+
+Install the template pack to bootstrap an MCP integration test project:
+
+```bash
+dotnet new install McpServerFactory.Templates
+dotnet new mcp-itest -n MyServer.Tests
+```
+
+The `mcp-itest` template accepts `--McpServerFactoryVersion` to override the
+package version (default `0.1.0`).
+
 ## Quick start
 
 ```csharp
@@ -112,4 +124,6 @@ See [CHANGELOG.md](CHANGELOG.md) for release history and upcoming changes.
 
 - `src/McpServerFactory` — reusable factory library.
 - `tests/McpServerFactory.Tests` — unit/integration-focused library tests.
+- `templates/McpServerFactory.Templates` — `dotnet new` template pack.
+- `samples/MinimalSmoke` — runnable sample console app.
 - `docs` — architecture notes and usage guidance.

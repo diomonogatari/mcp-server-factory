@@ -28,12 +28,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SourceLink package integration for source-indexed symbol publishing.
 - XML documentation for public library API surface.
 - Minimal runnable sample project under `samples/MinimalSmoke`.
+- `dotnet new` template package (`McpServerFactory.Templates`) with `mcp-itest`
+  scaffold for xUnit integration tests.
+- CI validation that packs, installs, instantiates, and runs tests from the
+  generated template output.
 
 ### Documentation
 
 - Public README with installation, quick start, and release guidance.
 - Compatibility and behavioral guarantees documentation.
 - Expanded architecture guide with lifecycle flow and failure semantics.
+- Template installation and usage guidance.
 
 [Unreleased]: https://github.com/diomonogatari/mcp-server-factory/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/diomonogatari/mcp-server-factory/releases/tag/v0.1.0
