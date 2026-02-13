@@ -47,6 +47,9 @@ jobs:
       - name: Pack
         run: dotnet pack src/McpServerFactory/McpServerFactory.csproj -c Release --no-build -o ./artifacts -p:PackageVersion=${{ steps.version.outputs.VERSION }}
 
+      - name: Pack templates
+        run: dotnet pack templates/McpServerFactory.Templates/McpServerFactory.Templates.csproj -c Release --no-build -o ./artifacts -p:PackageVersion=${{ steps.version.outputs.VERSION }}
+
       - name: Push to NuGet.org
         run: |
           dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

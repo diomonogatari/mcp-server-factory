@@ -42,6 +42,34 @@ jobs:
           --collect:"XPlat Code Coverage"
           --results-directory ./coverage
 
+      - name: Pack McpServerFactory for local feed
+        run: >
+          dotnet pack src/McpServerFactory/McpServerFactory.csproj
+          -c Release --no-build -o ./artifacts/local-feed
+          -p:PackageVersion=0.1.0-ci
+
+      - name: Pack template package
+        run: >
+          dotnet pack templates/McpServerFactory.Templates/McpServerFactory.Templates.csproj
+          -c Release --no-build -o ./artifacts/templates
+          -p:PackageVersion=0.1.0-ci
+
+      - name: Install template package
+        run: dotnet new install ./artifacts/templates/McpServerFactory.Templates.0.1.0-ci.nupkg
+
+      - name: Validate template scaffold
+        run: |
+          mkdir -p ./artifacts/template-smoke
+          dotnet new mcp-itest -n TemplateSmoke.Tests --output ./artifacts/template-smoke/TemplateSmoke.Tests --McpServerFactoryVersion 0.1.0-ci
+          cp ./nuget.config ./artifacts/template-smoke/nuget.template-test.config
+          dotnet nuget add source "$PWD/artifacts/local-feed" --name local-template-feed --configfile ./artifacts/template-smoke/nuget.template-test.config
+          dotnet restore ./artifacts/template-smoke/TemplateSmoke.Tests/TemplateSmoke.Tests.csproj --configfile ./artifacts/template-smoke/nuget.template-test.config
+          dotnet test ./artifacts/template-smoke/TemplateSmoke.Tests/TemplateSmoke.Tests.csproj -c Release --no-restore
+
+      - name: Uninstall template package
+        if: always()
+        run: dotnet new uninstall McpServerFactory.Templates
+
       - name: Upload coverage
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: codecov/codecov-action@v4
