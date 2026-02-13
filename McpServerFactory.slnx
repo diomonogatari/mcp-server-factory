@@ -5,6 +5,9 @@
   <Folder Name="/src/">
     <Project Path="src/McpServerFactory/McpServerFactory.csproj" />
   </Folder>
+  <Folder Name="/templates/">
+    <Project Path="templates/McpServerFactory.Templates/McpServerFactory.Templates.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/McpServerFactory.Tests/McpServerFactory.Tests.csproj" />
   </Folder>

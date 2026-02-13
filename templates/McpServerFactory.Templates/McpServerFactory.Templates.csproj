@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>McpServerFactory.Templates</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Diogo Carvalho</Authors>
+    <Title>McpServerFactory templates</Title>
+    <Description>dotnet new templates for bootstrapping MCP server integration tests using McpServerFactory.</Description>
+    <PackageTags>dotnet-new;template;mcp;testing;xunit</PackageTags>
+    <PackageProjectUrl>https://github.com/diomonogatari/mcp-server-factory</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/diomonogatari/mcp-server-factory.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>false</IncludeSymbols>
+
+    <PackageType>Template</PackageType>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="content\**\*" Exclude="content\**\bin\**;content\**\obj\**" Pack="true" />
+    <Content Include="README.md" Pack="true" PackagePath="\" />
+    <Compile Remove="**\*" />
+  </ItemGroup>
+
+</Project>
