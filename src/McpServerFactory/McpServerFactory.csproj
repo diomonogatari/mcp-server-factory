@@ -16,7 +16,6 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>See https://github.com/diomonogatari/mcp-server-factory/releases</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

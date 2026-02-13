@@ -17,18 +17,21 @@ stream pipes, and lets tests call tools directly with zero network setup.
 
 - In-process MCP server host (`Host.CreateApplicationBuilder`)
 - In-memory duplex transport wiring (`Pipe` + stream transports)
-- `McpClient` creation and lifecycle management
+- Thread-safe `McpClient` creation and lifecycle management
 - DI override hooks for mocked dependencies
 - Optional helper wrapper (`McpTestClient`)
 
 ## API at a glance
 
-- `McpServerFactory`
+- `McpServerIntegrationFactory`
   - `CreateClientAsync()` starts host + returns connected client
   - `Services` gives access to DI container after startup
   - Override `ConfigureMcpServer` and `ConfigureServices` for custom setup
+- `McpServerFactory`
+  - Backward-compatible entry point (same behavior and API contracts)
 - `McpServerFactoryOptions`
-  - Server info, initialization timeout, optional server instructions
+  - Server info, startup/disposal timeouts, optional instructions
+  - Logging controls (`SuppressHostLogging`, `ConfigureLogging`)
 - `McpTestClient`
   - Convenience helper to list tool names and extract text responses
 

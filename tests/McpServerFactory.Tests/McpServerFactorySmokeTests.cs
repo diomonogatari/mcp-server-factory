@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using FactoryClient = McpServerFactory.Testing.McpTestClient;
-using FactoryHost = McpServerFactory.Testing.McpServerFactory;
+using FactoryHost = McpServerFactory.Testing.McpServerIntegrationFactory;
 
 namespace McpServerFactory.Tests;
 
