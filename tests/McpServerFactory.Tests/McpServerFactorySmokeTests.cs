@@ -1,4 +1,3 @@
-using McpServerFactory.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
