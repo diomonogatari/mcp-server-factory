@@ -1,8 +1,7 @@
+using McpServerFactory.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
-using FactoryClient = McpServerFactory.Testing.McpTestClient;
-using FactoryHost = McpServerFactory.Testing.McpServerIntegrationFactory;
 
 namespace McpServerFactory.Tests;
 
@@ -11,22 +10,22 @@ public class McpServerFactorySmokeTests
     [Fact]
     public async Task CreateClientAsync_WithRegisteredTool_CanListAndInvokeTool()
     {
-        await using var factory = new FactoryHost(
+        await using McpServerIntegrationFactory factory = new(
             configureMcpServer: builder => builder.WithTools<EchoTools>());
 
-        await using var client = await factory.CreateClientAsync();
+        McpClient client = await factory.CreateClientAsync();
 
-        var tools = await client.ListToolsAsync();
+        IList<McpClientTool> tools = await client.ListToolsAsync();
         Assert.Contains(tools, tool => tool.Name == "echo");
 
-        var result = await client.CallToolAsync(
+        CallToolResult result = await client.CallToolAsync(
             "echo",
             arguments: new Dictionary<string, object?>
             {
                 ["message"] = "hello",
             });
 
-        var text = result.Content.OfType<TextContentBlock>().FirstOrDefault()?.Text;
+        string? text = result.Content.OfType<TextContentBlock>().FirstOrDefault()?.Text;
 
         Assert.Equal("hello", text);
     }
@@ -34,50 +33,17 @@ public class McpServerFactorySmokeTests
     [Fact]
     public async Task CreateClientAsync_WithDependencyOverride_UsesTestService()
     {
-        var provider = new FixedMessageProvider("from-test-service");
+        FixedMessageProvider provider = new("from-test-service");
 
-        await using var factory = new FactoryHost(
+        await using McpServerIntegrationFactory factory = new(
             configureServices: services => services.AddSingleton<IMessageProvider>(provider),
             configureMcpServer: builder => builder.WithTools<GreetingTools>());
 
-        await using var testClient = new FactoryClient(await factory.CreateClientAsync());
+        McpTestClient testClient = await factory.CreateTestClientAsync();
 
-        var text = await testClient.CallToolForTextAsync("greet");
+        string text = await testClient.CallToolForTextAsync("greet");
 
         Assert.Equal("from-test-service", text);
         Assert.Same(provider, factory.Services.GetRequiredService<IMessageProvider>());
-    }
-
-    [McpServerToolType]
-    private sealed class EchoTools
-    {
-        [McpServerTool(Name = "echo")]
-        public string Echo(string message)
-        {
-            return message;
-        }
-    }
-
-    [McpServerToolType]
-    private sealed class GreetingTools(IMessageProvider messageProvider)
-    {
-        [McpServerTool(Name = "greet")]
-        public string Greet()
-        {
-            return messageProvider.GetMessage();
-        }
-    }
-
-    private interface IMessageProvider
-    {
-        string GetMessage();
-    }
-
-    private sealed class FixedMessageProvider(string message) : IMessageProvider
-    {
-        public string GetMessage()
-        {
-            return message;
-        }
     }
 }
