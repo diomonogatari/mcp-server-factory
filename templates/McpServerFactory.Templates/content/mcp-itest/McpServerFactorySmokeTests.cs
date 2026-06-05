@@ -12,7 +12,8 @@ public class McpServerFactorySmokeTests
         await using var factory = new McpServerIntegrationFactory(
             configureMcpServer: builder => builder.WithTools<EchoTools>());
 
-        await using var client = new McpTestClient(await factory.CreateClientAsync());
+        // The factory owns and disposes the client; no need to dispose it yourself.
+        var client = await factory.CreateTestClientAsync();
 
         var response = await client.CallToolForTextAsync(
             "echo",

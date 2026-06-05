@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>McpServerFactory.Templates</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>Diogo Carvalho</Authors>
     <Title>McpServerFactory templates</Title>
     <Description>dotnet new templates for bootstrapping MCP server integration tests using McpServerFactory.</Description>
@@ -23,8 +23,42 @@
     <NoDefaultExcludes>true</NoDefaultExcludes>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- The version the scaffolded project pins for the McpServerFactory package, defaulting to this package's version. -->
+    <TemplateDefaultVersion Condition="'$(PackageVersion)' != ''">$(PackageVersion)</TemplateDefaultVersion>
+    <TemplateDefaultVersion Condition="'$(TemplateDefaultVersion)' == ''">$(Version)</TemplateDefaultVersion>
+    <!-- Pin under obj/ (gitignored, deterministic) rather than IntermediateOutputPath, which is not reliably set at static evaluation. -->
+    <GeneratedTemplateJson>$(MSBuildProjectDirectory)/obj/template-gen/template.json</GeneratedTemplateJson>
+    <TemplateJsonSource>$(MSBuildProjectDirectory)/content/mcp-itest/.template.config/template.json</TemplateJsonSource>
+  </PropertyGroup>
+
+  <!--
+    Inject the current package version as the template's default McpServerFactoryVersion at pack time so a
+    scaffolded project tracks the just-packed library version instead of a hard-coded literal. Hooked to the
+    pack pipeline so it also runs during a no-build pack.
+  -->
+  <!-- No Inputs/Outputs incrementality: the output depends on the package version, not just the source file. -->
+  <Target Name="InjectTemplateDefaultVersion" BeforeTargets="Build;GenerateNuspec">
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(GeneratedTemplateJson)))" />
+    <PropertyGroup>
+      <_TemplateJsonContent>$([System.IO.File]::ReadAllText($(TemplateJsonSource)).Replace('__TEMPLATE_VERSION__', '$(TemplateDefaultVersion)'))</_TemplateJsonContent>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(GeneratedTemplateJson)" Lines="$(_TemplateJsonContent)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
   <ItemGroup>
-    <Content Include="content\**\*" Exclude="content\**\bin\**;content\**\obj\**" Pack="true" />
+    <!-- Pack everything except the source template.json (which still holds the __TEMPLATE_VERSION__ placeholder)... -->
+    <Content Include="content\**\*"
+             Exclude="content\**\bin\**;content\**\obj\**;content\mcp-itest\.template.config\template.json"
+             Pack="true" />
+    <!--
+      ...and pack the version-injected copy in its place. The PackagePath mirrors how the globbed content lands
+      (ContentTargetFolders=content prefixes another "content"), so the generated template.json stays in the same
+      template root folder as the scaffolded sources.
+    -->
+    <Content Include="$(GeneratedTemplateJson)"
+             Pack="true"
+             PackagePath="content\content\mcp-itest\.template.config\template.json" />
     <Content Include="README.md" Pack="true" PackagePath="\" />
     <Compile Remove="**\*" />
   </ItemGroup>

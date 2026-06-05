@@ -21,7 +21,7 @@
       "type": "parameter",
       "datatype": "text",
       "description": "Version of the McpServerFactory NuGet package.",
-      "defaultValue": "0.1.0",
+      "defaultValue": "__TEMPLATE_VERSION__",
       "replaces": "__MCP_SERVER_FACTORY_VERSION__"
     }
   },
