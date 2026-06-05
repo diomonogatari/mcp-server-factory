@@ -38,6 +38,7 @@ public class McpServerFactory(
 
     private IHost? host;
     private McpClient? client;
+    private McpTestClient? testClient;
     private Pipe? clientToServerPipe;
     private Pipe? serverToClientPipe;
     private bool disposed;
@@ -76,6 +77,16 @@ public class McpServerFactory(
     }
 
     /// <summary>
+    /// Allows subclasses to configure the host (configuration, environment, services, hosted services) before the
+    /// MCP server is registered. The default implementation invokes <see cref="McpServerFactoryOptions.ConfigureHost"/>.
+    /// </summary>
+    /// <param name="builder">The host application builder.</param>
+    protected virtual void ConfigureHost(IHostApplicationBuilder builder)
+    {
+        factoryOptions.ConfigureHost?.Invoke(builder);
+    }
+
+    /// <summary>
     /// Allows subclasses to customize host logging.
     /// </summary>
     /// <param name="logging">The host logging builder.</param>
@@ -95,7 +106,7 @@ public class McpServerFactory(
     /// <returns>A configured <see cref="McpClientOptions"/> instance.</returns>
     protected virtual McpClientOptions CreateClientOptions()
     {
-        return new McpClientOptions
+        McpClientOptions clientOptions = new()
         {
             ClientInfo = new Implementation
             {
@@ -104,6 +115,9 @@ public class McpServerFactory(
             },
             InitializationTimeout = factoryOptions.InitializationTimeout,
         };
+
+        factoryOptions.ConfigureClient?.Invoke(clientOptions);
+        return clientOptions;
     }
 
     /// <summary>
@@ -127,6 +141,7 @@ public class McpServerFactory(
 
             var builder = Host.CreateApplicationBuilder();
             ConfigureLogging(builder.Logging);
+            ConfigureHost(builder);
 
             var createdClientToServerPipe = new Pipe();
             var createdServerToClientPipe = new Pipe();
@@ -179,6 +194,10 @@ public class McpServerFactory(
                     await TryStopAndDisposeHostAsync(builtHost).ConfigureAwait(false);
                 }
 
+                // The freshly created pipes are still local at this point (the instance fields
+                // are only assigned on success below), so complete them here or they would leak.
+                await CompletePipesAsync(createdClientToServerPipe, createdServerToClientPipe).ConfigureAwait(false);
+
                 throw;
             }
 
@@ -195,10 +214,28 @@ public class McpServerFactory(
         }
     }
 
+    /// <summary>
+    /// Builds and starts the in-memory MCP server (if needed) and returns a factory-owned
+    /// <see cref="McpTestClient"/> wrapper over the connected client.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token for server and client initialization.</param>
+    /// <returns>A factory-owned <see cref="McpTestClient"/>. The factory disposes the underlying client; you do not need to.</returns>
+    /// <exception cref="ObjectDisposedException">Thrown when the factory has already been disposed.</exception>
+    public async Task<McpTestClient> CreateTestClientAsync(CancellationToken cancellationToken = default)
+    {
+        McpClient created = await CreateClientAsync(cancellationToken).ConfigureAwait(false);
+        return testClient ??= new McpTestClient(created, ownsClient: false);
+    }
+
     /// <inheritdoc />
+    /// <remarks>
+    /// The lifecycle lock acquisition is bounded by <see cref="McpServerFactoryOptions.ShutdownTimeout"/>.
+    /// If the lock cannot be acquired in time (for example, a concurrent <see cref="CreateClientAsync(CancellationToken)"/>
+    /// is stuck), disposal proceeds on a best-effort basis without the lock rather than hanging teardown indefinitely.
+    /// </remarks>
     public async ValueTask DisposeAsync()
     {
-        await lifecycleLock.WaitAsync().ConfigureAwait(false);
+        bool lockAcquired = await lifecycleLock.WaitAsync(factoryOptions.ShutdownTimeout).ConfigureAwait(false);
 
         try
         {
@@ -213,6 +250,7 @@ public class McpServerFactory(
             {
                 await client.DisposeAsync().ConfigureAwait(false);
                 client = null;
+                testClient = null;
             }
 
             if (host is not null)
@@ -223,14 +261,7 @@ public class McpServerFactory(
 
             if (!pipesCompleted)
             {
-                if (clientToServerPipe is not null && serverToClientPipe is not null)
-                {
-                    await clientToServerPipe.Writer.CompleteAsync().ConfigureAwait(false);
-                    await serverToClientPipe.Writer.CompleteAsync().ConfigureAwait(false);
-                    await clientToServerPipe.Reader.CompleteAsync().ConfigureAwait(false);
-                    await serverToClientPipe.Reader.CompleteAsync().ConfigureAwait(false);
-                }
-
+                await CompletePipesAsync(clientToServerPipe, serverToClientPipe).ConfigureAwait(false);
                 clientToServerPipe = null;
                 serverToClientPipe = null;
                 pipesCompleted = true;
@@ -238,8 +269,28 @@ public class McpServerFactory(
         }
         finally
         {
-            lifecycleLock.Release();
+            if (lockAcquired)
+            {
+                lifecycleLock.Release();
+            }
         }
+    }
+
+    /// <summary>
+    /// Completes both endpoints of the two in-memory pipes, releasing their buffers.
+    /// </summary>
+    /// <remarks>Safe to call with <see langword="null"/> pipes (no-op).</remarks>
+    private static async Task CompletePipesAsync(Pipe? clientToServer, Pipe? serverToClient)
+    {
+        if (clientToServer is null || serverToClient is null)
+        {
+            return;
+        }
+
+        await clientToServer.Writer.CompleteAsync().ConfigureAwait(false);
+        await serverToClient.Writer.CompleteAsync().ConfigureAwait(false);
+        await clientToServer.Reader.CompleteAsync().ConfigureAwait(false);
+        await serverToClient.Reader.CompleteAsync().ConfigureAwait(false);
     }
 
     private static async Task TryStopAndDisposeHostAsync(IHost hostToDispose)
