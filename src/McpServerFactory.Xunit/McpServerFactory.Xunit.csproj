@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <IsTestProject>false</IsTestProject>
+    <PackageId>McpServerFactory.Xunit</PackageId>
+    <Authors>Diogo Carvalho</Authors>
+    <Description>xUnit fixtures for McpServerFactory: boot an in-memory MCP server once per test class via IClassFixture.</Description>
+    <PackageTags>mcp;model-context-protocol;testing;integration-tests;xunit;test-harness;dotnet</PackageTags>
+    <PackageProjectUrl>https://github.com/diomonogatari/mcp-server-factory</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/diomonogatari/mcp-server-factory.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>See https://github.com/diomonogatari/mcp-server-factory/releases</PackageReleaseNotes>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\McpServerFactory\McpServerFactory.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
