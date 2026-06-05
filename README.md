@@ -9,10 +9,31 @@
 
 In-memory integration **test harness** for .NET Model Context Protocol (MCP) servers.
 
-`McpServerFactory` boots an MCP server in-process, connects a real `McpClient` through
-in-memory streams, and lets you run realistic integration tests without network ports,
-Docker, or external services — a testing experience similar in spirit to
-`WebApplicationFactory<T>` for ASP.NET Core.
+**Your MCP server's real contract isn't with your code — it's with the model.** The tool names
+and JSON schemas, the descriptions the agent reads, the error text it sees, the sampling
+round-trips it triggers. McpServerFactory boots your server **in-process** and connects a *real*
+`McpClient` over in-memory pipes, so you can assert on that contract in a plain unit test:
+breakpoints on both sides, dependencies swapped for fakes, no subprocess, no ports, no Docker,
+no live model.
+
+Think `WebApplicationFactory<T>` — but for MCP.
+
+```csharp
+// one process: a real client ⇄ your real server, over in-memory pipes
+McpTestClient client = await factory.CreateTestClientAsync();
+
+Assert.Equal("hello", await client.CallToolForTextAsync(
+    "echo", new Dictionary<string, object?> { ["message"] = "hello" }));
+```
+
+## What you can actually verify
+
+- A tool **exists**, and its input schema/description are what you think (`GetToolAsync`, `McpAssert.ToolExistsAsync`).
+- A tool returns the right **text** or **typed JSON** (`CallToolForTextAsync`, `CallToolForJsonAsync<T>`).
+- A tool **fails the way you intend** — `IsError` results throw instead of quietly passing a test (`CallToolExpectingErrorAsync`).
+- **Server-initiated sampling** does the right thing, answered by a fake model you control (`FakeSamplingHandler`).
+- The expected **notifications** fire — logging, progress, list-changed (`NotificationRecorder`).
+- Your **real DI graph** wires up, with the slow/external bits mocked (`configureServices` / `ConfigureHost`).
 
 > **Scope:** by default the factory hosts the **tool/resource/prompt classes you register**
 > over an in-memory transport. It does not auto-run your server's `Program.cs`. To exercise
@@ -98,6 +119,27 @@ boots the server once per test class via `IClassFixture<T>`.
 handlers with dependency substitution. **Reach for a stdio subprocess instead** when you must
 validate the actual published binary, its real transport configuration, or process-level startup.
 
+## Used in the wild
+
+[`stash-mcp`](https://github.com/diomonogatari/stash-mcp) — a 40-tool MCP server for Bitbucket
+Server — tests its tools with McpServerFactory. It subclasses the factory, registers its real tool
+assembly, and swaps the live Bitbucket client, cache, and resilience services for fakes, so the
+whole tool surface is exercised in-process without ever touching a Bitbucket instance:
+
+```csharp
+public sealed class StashMcpTestFactory(Action<StashMcpTestFactory>? configureMocks = null)
+    : McpServerFactory.Testing.McpServerFactory
+{
+    public IBitbucketClient BitbucketClient { get; } = Substitute.For<IBitbucketClient>();
+
+    protected override void ConfigureMcpServer(IMcpServerBuilder builder) =>
+        builder.WithToolsFromAssembly(typeof(ProjectTools).Assembly);
+
+    protected override void ConfigureServices(IServiceCollection services) =>
+        services.AddSingleton(BitbucketClient); // ...plus cache, settings, resilience fakes
+}
+```
+
 ## Testing tools, resources, prompts, and structured output
 
 `McpTestClient` wraps a real `McpClient` with test-shaped helpers (all pagination-safe):
@@ -133,7 +175,8 @@ await using McpServerIntegrationFactory factory = new(
     });
 
 McpTestClient client = await factory.CreateTestClientAsync();
-string answer = await client.CallToolForTextAsync("ask", new() { ["question"] = "..." });
+string answer = await client.CallToolForTextAsync(
+    "ask", new Dictionary<string, object?> { ["question"] = "..." });
 
 Assert.Single(sampling.ReceivedRequests); // assert what the server asked the model
 ```
@@ -183,7 +226,8 @@ public sealed class EchoTests(EchoFixture fixture) : IClassFixture<EchoFixture>
 {
     [Fact]
     public async Task Echoes() =>
-        Assert.Equal("hi", await fixture.TestClient.CallToolForTextAsync("echo", new() { ["message"] = "hi" }));
+        Assert.Equal("hi", await fixture.TestClient.CallToolForTextAsync(
+            "echo", new Dictionary<string, object?> { ["message"] = "hi" }));
 }
 ```
 
