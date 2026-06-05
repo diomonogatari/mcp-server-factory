@@ -26,7 +26,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
 
       - name: Restore
         run: dotnet restore McpServerFactory.slnx
@@ -46,6 +49,9 @@ jobs:
 
       - name: Pack
         run: dotnet pack src/McpServerFactory/McpServerFactory.csproj -c Release --no-build -o ./artifacts -p:PackageVersion=${{ steps.version.outputs.VERSION }}
+
+      - name: Pack xUnit fixtures
+        run: dotnet pack src/McpServerFactory.Xunit/McpServerFactory.Xunit.csproj -c Release --no-build -o ./artifacts -p:PackageVersion=${{ steps.version.outputs.VERSION }}
 
       - name: Pack templates
         run: dotnet pack templates/McpServerFactory.Templates/McpServerFactory.Templates.csproj -c Release --no-build -o ./artifacts -p:PackageVersion=${{ steps.version.outputs.VERSION }}

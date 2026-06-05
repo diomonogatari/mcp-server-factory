@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
     <PackageId>McpServerFactory</PackageId>
     <Authors>Diogo Carvalho</Authors>
-    <Description>In-memory integration testing factory for .NET Model Context Protocol (MCP) servers.</Description>
-    <PackageTags>mcp;model-context-protocol;testing;integration-tests;dotnet</PackageTags>
+    <Description>In-memory integration TEST harness for .NET Model Context Protocol (MCP) servers — boots an MCP server in-process and connects a real client over in-memory streams, like WebApplicationFactory for MCP.</Description>
+    <PackageTags>mcp;model-context-protocol;testing;integration-tests;test-harness;xunit;in-memory;webapplicationfactory;dotnet</PackageTags>
     <PackageProjectUrl>https://github.com/diomonogatari/mcp-server-factory</PackageProjectUrl>
     <RepositoryUrl>https://github.com/diomonogatari/mcp-server-factory.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

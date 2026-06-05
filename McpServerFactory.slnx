@@ -4,6 +4,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/McpServerFactory/McpServerFactory.csproj" />
+    <Project Path="src/McpServerFactory.Xunit/McpServerFactory.Xunit.csproj" />
   </Folder>
   <Folder Name="/templates/">
     <Project Path="templates/McpServerFactory.Templates/McpServerFactory.Templates.csproj" />

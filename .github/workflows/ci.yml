@@ -25,7 +25,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
 
       - name: Restore
         run: dotnet restore McpServerFactory.slnx
@@ -46,21 +49,30 @@ jobs:
         run: >
           dotnet pack src/McpServerFactory/McpServerFactory.csproj
           -c Release --no-build -o ./artifacts/local-feed
-          -p:PackageVersion=0.1.0-ci
+          -p:PackageVersion=0.2.0-ci
+
+      - name: Pack McpServerFactory.Xunit for local feed
+        run: >
+          dotnet pack src/McpServerFactory.Xunit/McpServerFactory.Xunit.csproj
+          -c Release --no-build -o ./artifacts/local-feed
+          -p:PackageVersion=0.2.0-ci
 
       - name: Pack template package
         run: >
           dotnet pack templates/McpServerFactory.Templates/McpServerFactory.Templates.csproj
           -c Release --no-build -o ./artifacts/templates
-          -p:PackageVersion=0.1.0-ci
+          -p:PackageVersion=0.2.0-ci
 
       - name: Install template package
-        run: dotnet new install ./artifacts/templates/McpServerFactory.Templates.0.1.0-ci.nupkg
+        run: dotnet new install ./artifacts/templates/McpServerFactory.Templates.0.2.0-ci.nupkg
 
       - name: Validate template scaffold
         run: |
           mkdir -p ./artifacts/template-smoke
-          dotnet new mcp-itest -n TemplateSmoke.Tests --output ./artifacts/template-smoke/TemplateSmoke.Tests --McpServerFactoryVersion 0.1.0-ci
+          # No --McpServerFactoryVersion: this validates the pack-time-injected default tracks the package
+          # version (0.2.0-ci here), so the default scaffold path stays restorable and never drifts.
+          dotnet new mcp-itest -n TemplateSmoke.Tests --output ./artifacts/template-smoke/TemplateSmoke.Tests
+          grep -q '0.2.0-ci' ./artifacts/template-smoke/TemplateSmoke.Tests/TemplateSmoke.Tests.csproj
           cp ./nuget.config ./artifacts/template-smoke/nuget.template-test.config
           dotnet nuget add source "$PWD/artifacts/local-feed" --name local-template-feed --configfile ./artifacts/template-smoke/nuget.template-test.config
           dotnet restore ./artifacts/template-smoke/TemplateSmoke.Tests/TemplateSmoke.Tests.csproj --configfile ./artifacts/template-smoke/nuget.template-test.config
