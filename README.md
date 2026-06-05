@@ -246,14 +246,16 @@ public sealed class EchoTests(EchoFixture fixture) : IClassFixture<EchoFixture>
 ## Compatibility and support
 
 - Target frameworks: `net8.0`, `net9.0`, `net10.0`.
-- MCP SDK dependency: `ModelContextProtocol` `0.4.0-preview.3`.
+- MCP SDK dependency: `ModelContextProtocol` `1.4.0`.
 - Compatibility promise: each package release is validated against the pinned MCP SDK version on all
   target frameworks.
-- Upgrade policy: MCP SDK bumps are explicit and called out in [CHANGELOG.md](CHANGELOG.md). While the
-  MCP SDK is in preview, `McpServerFactory` stays `0.x` and bumps in lockstep.
+- Upgrade policy: MCP SDK bumps are explicit and called out in [CHANGELOG.md](CHANGELOG.md). Now that
+  the MCP SDK is stable, `McpServerFactory` follows [Semantic Versioning](https://semver.org/): an MCP
+  SDK change that breaks this library's public surface ships as a new major version.
 
 | McpServerFactory | MCP SDK | Target frameworks |
 | --- | --- | --- |
+| 1.0.x | 1.4.0 | net8.0, net9.0, net10.0 |
 | 0.2.x | 0.4.0-preview.3 | net8.0, net9.0, net10.0 |
 | 0.1.x | 0.4.0-preview.3 | net10.0 |
 

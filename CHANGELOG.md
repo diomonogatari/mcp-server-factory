@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-05
+
+First stable release. The official MCP C# SDK reached `1.0`, so `McpServerFactory` stabilizes its
+own public surface in lockstep and now follows [Semantic Versioning](https://semver.org/).
+
+### Changed
+
+- **Bumped the MCP SDK** `ModelContextProtocol` from `0.4.0-preview.3` to the stable **`1.4.0`**.
+  Target frameworks (`net8.0`, `net9.0`, `net10.0`) and the public `McpServerFactory` API are
+  unchanged — this is a dependency bump, not an API break for consumers.
+
+### Internal
+
+- Migrated to SDK API changes introduced across the `0.5.0`–`1.4.0` line:
+  - Replaced the removed `EnumerateToolsAsync`/`EnumerateResourcesAsync`/`EnumeratePromptsAsync`
+    client streams with the paging-draining `ListToolsAsync`/`ListResourcesAsync`/`ListPromptsAsync`.
+  - `CallToolResult.StructuredContent` is now a `JsonElement?` (was `JsonNode?`); `CallToolForJsonAsync`
+    deserializes from it accordingly.
+  - `McpClient.ReadResourceAsync` now takes a `System.Uri`; `ReadResourceTextAsync` still accepts a
+    `string` URI and converts internally.
+  - `CreateMessageResult.Content` and `SamplingMessage.Content` are now `IList<ContentBlock>`;
+    `FakeSamplingHandler` builds a single-block list.
+
 ## [0.2.0] - 2026-06-05
 
 ### Added
@@ -74,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expanded architecture guide with lifecycle flow and failure semantics.
 - Template installation and usage guidance.
 
-[Unreleased]: https://github.com/diomonogatari/mcp-server-factory/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/diomonogatari/mcp-server-factory/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/diomonogatari/mcp-server-factory/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/diomonogatari/mcp-server-factory/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/diomonogatari/mcp-server-factory/releases/tag/v0.1.0

@@ -58,12 +58,12 @@ internal sealed class SamplingTools
         CreateMessageResult result = await server.SampleAsync(
             new CreateMessageRequestParams
             {
-                Messages = [new SamplingMessage { Role = Role.User, Content = new TextContentBlock { Text = question } }],
+                Messages = [new SamplingMessage { Role = Role.User, Content = [new TextContentBlock { Text = question }] }],
                 MaxTokens = 64,
             },
             cancellationToken);
 
-        return (result.Content as TextContentBlock)?.Text ?? "(no text)";
+        return result.Content.OfType<TextContentBlock>().FirstOrDefault()?.Text ?? "(no text)";
     }
 }
 

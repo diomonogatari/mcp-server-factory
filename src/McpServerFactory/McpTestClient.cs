@@ -2,7 +2,6 @@ using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 
 namespace McpServerFactory.Testing;
 
@@ -49,13 +48,8 @@ public sealed class McpTestClient(McpClient client, bool ownsClient = false) : I
     /// <returns>All tool names currently reported by the server.</returns>
     public async Task<string[]> GetToolNamesAsync(CancellationToken cancellationToken = default)
     {
-        List<string> names = [];
-        await foreach (McpClientTool tool in Inner.EnumerateToolsAsync(cancellationToken: cancellationToken).ConfigureAwait(false))
-        {
-            names.Add(tool.Name);
-        }
-
-        return [.. names];
+        IList<McpClientTool> tools = await Inner.ListToolsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return [.. tools.Select(tool => tool.Name)];
     }
 
     /// <summary>
@@ -66,15 +60,8 @@ public sealed class McpTestClient(McpClient client, bool ownsClient = false) : I
     /// <returns>The matching <see cref="McpClientTool"/> (useful for asserting on its input schema), or <see langword="null"/>.</returns>
     public async Task<McpClientTool?> GetToolAsync(string toolName, CancellationToken cancellationToken = default)
     {
-        await foreach (McpClientTool tool in Inner.EnumerateToolsAsync(cancellationToken: cancellationToken).ConfigureAwait(false))
-        {
-            if (string.Equals(tool.Name, toolName, StringComparison.Ordinal))
-            {
-                return tool;
-            }
-        }
-
-        return null;
+        IList<McpClientTool> tools = await Inner.ListToolsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return tools.FirstOrDefault(tool => string.Equals(tool.Name, toolName, StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -153,10 +140,10 @@ public sealed class McpTestClient(McpClient client, bool ownsClient = false) : I
         CallToolResult result = await CallToolAsync(toolName, arguments, cancellationToken).ConfigureAwait(false);
         JsonSerializerOptions options = serializerOptions ?? McpJsonUtilities.DefaultOptions;
 
-        JsonNode? structured = result.StructuredContent;
+        JsonElement? structured = result.StructuredContent;
         if (structured is not null)
         {
-            return structured.Deserialize<T>(options);
+            return structured.Value.Deserialize<T>(options);
         }
 
         // Many tools return JSON as a text content block without opting into structured content;
@@ -203,13 +190,8 @@ public sealed class McpTestClient(McpClient client, bool ownsClient = false) : I
     /// <returns>All resource URIs currently reported by the server.</returns>
     public async Task<string[]> GetResourceUrisAsync(CancellationToken cancellationToken = default)
     {
-        List<string> uris = [];
-        await foreach (McpClientResource resource in Inner.EnumerateResourcesAsync(cancellationToken).ConfigureAwait(false))
-        {
-            uris.Add(resource.Uri);
-        }
-
-        return [.. uris];
+        IList<McpClientResource> resources = await Inner.ListResourcesAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return [.. resources.Select(resource => resource.Uri)];
     }
 
     /// <summary>
@@ -221,7 +203,7 @@ public sealed class McpTestClient(McpClient client, bool ownsClient = false) : I
     /// <exception cref="InvalidOperationException">Thrown when the resource has no text content.</exception>
     public async Task<string> ReadResourceTextAsync(string uri, CancellationToken cancellationToken = default)
     {
-        ReadResourceResult result = await Inner.ReadResourceAsync(uri, cancellationToken).ConfigureAwait(false);
+        ReadResourceResult result = await Inner.ReadResourceAsync(new Uri(uri), cancellationToken: cancellationToken).ConfigureAwait(false);
 
         TextResourceContents? textContents = result.Contents.OfType<TextResourceContents>().FirstOrDefault();
         if (textContents is null)
@@ -239,13 +221,8 @@ public sealed class McpTestClient(McpClient client, bool ownsClient = false) : I
     /// <returns>All prompt names currently reported by the server.</returns>
     public async Task<string[]> GetPromptNamesAsync(CancellationToken cancellationToken = default)
     {
-        List<string> names = [];
-        await foreach (McpClientPrompt prompt in Inner.EnumeratePromptsAsync(cancellationToken).ConfigureAwait(false))
-        {
-            names.Add(prompt.Name);
-        }
-
-        return [.. names];
+        IList<McpClientPrompt> prompts = await Inner.ListPromptsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return [.. prompts.Select(prompt => prompt.Name)];
     }
 
     /// <summary>

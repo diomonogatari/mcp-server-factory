@@ -73,7 +73,7 @@ public sealed class FakeSamplingHandler
     {
         return new CreateMessageResult
         {
-            Content = new TextContentBlock { Text = text },
+            Content = [new TextContentBlock { Text = text }],
             Model = "fake-model",
             Role = Role.Assistant,
             StopReason = "endTurn",
